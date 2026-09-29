@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Portfolio case study: market data quality, analytics engineering, and event monitoring with Umbra.">
+  <title>Umbra / Market Data Analytics Case Study</title>
+  <style>
+    :root {
+      --ink: #eef4f3;
+      --muted: #8f9d9d;
+      --dim: #627171;
+      --line: rgba(194, 219, 215, .14);
+      --panel: #141918;
+      --panel-raised: #1a201f;
+      --canvas: #0c100f;
+      --teal: #67d2c2;
+      --teal-deep: #1c8076;
+      --coral: #f1716c;
+      --amber: #f1ae4b;
+      --blue: #89b9ff;
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 76% 0%, rgba(38, 109, 102, .18), transparent 30rem),
+        radial-gradient(circle at 10% 36%, rgba(241, 113, 108, .07), transparent 25rem),
+        var(--canvas);
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      line-height: 1.55;
+      letter-spacing: .01em;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .15;
+      background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black, transparent 78%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .shell { width: min(1180px, calc(100% - 48px)); margin: 0 auto; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      border-bottom: 1px solid var(--line);
+      background: rgba(12, 16, 15, .82);
+      backdrop-filter: blur(18px);
+    }
+    .topbar-inner { display: flex; align-items: center; justify-content: space-between; min-height: 72px; gap: 28px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 750; letter-spacing: -.03em; }
+    .brand-mark { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--teal); color: var(--teal); border-radius: 9px; font: 700 13px/1 ui-monospace, monospace; }
+    .brand span { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
+    .topnav { display: flex; gap: 22px; color: var(--muted); font-size: 12px; }
+    .topnav a:hover { color: var(--teal); }
+    .topnav .active { color: var(--ink); }
+
+    .hero { padding: 92px 0 66px; display: grid; grid-template-columns: 1.2fr .8fr; gap: 70px; align-items: end; }
+    .eyebrow { color: var(--teal); font: 700 11px/1 ui-monospace, monospace; letter-spacing: .18em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 760px; margin-bottom: 26px; font: 500 clamp(48px, 7vw, 86px)/.98 "Iowan Old Style", Georgia, serif; letter-spacing: -.055em; }
+    .hero-lede { max-width: 650px; margin-bottom: 32px; color: #c4cecc; font-size: 18px; }
+    .hero-note { border-left: 2px solid var(--teal); padding-left: 17px; color: var(--muted); font-size: 13px; }
+    .hero-note strong { display: block; color: var(--ink); margin-bottom: 4px; }
+    .meta-stack { display: grid; gap: 12px; }
+    .meta-card { padding: 18px 20px; border: 1px solid var(--line); border-radius: 14px; background: rgba(20, 25, 24, .74); }
+    .meta-label { color: var(--dim); font: 10px/1.2 ui-monospace, monospace; letter-spacing: .15em; text-transform: uppercase; }
+    .meta-value { margin-top: 8px; color: var(--ink); font-size: 15px; }
+
+    .section { padding: 66px 0; border-top: 1px solid var(--line); }
+    .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 26px; }
+    .section-heading h2 { margin-bottom: 0; font-size: clamp(26px, 3vw, 40px); letter-spacing: -.04em; }
+    .section-heading p { max-width: 510px; margin-bottom: 2px; color: var(--muted); font-size: 14px; }
+    .number { color: var(--teal); font: 12px ui-monospace, monospace; }
+
+    .statement { display: grid; grid-template-columns: .8fr 1.2fr; gap: 24px; }
+    .statement-card { padding: 26px; border: 1px solid var(--line); border-radius: var(--radius); background: linear-gradient(140deg, rgba(28, 128, 118, .13), rgba(20, 25, 24, .88) 55%); }
+    .statement-card h3 { margin-bottom: 12px; font-size: 17px; }
+    .statement-card p { margin-bottom: 0; color: var(--muted); font-size: 14px; }
+    .statement-card.featured { border-color: rgba(103, 210, 194, .4); }
+
+    .case-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .case-card { overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+    .case-card.wide { grid-column: 1 / -1; }
+    .case-image { position: relative; min-height: 180px; border-bottom: 1px solid var(--line); background: #0d1211; }
+    .case-image img { display: block; width: 100%; height: auto; min-height: 180px; object-fit: contain; object-position: top; opacity: .96; }
+    .image-tag { position: absolute; top: 14px; left: 14px; padding: 5px 8px; border: 1px solid rgba(255,255,255,.15); border-radius: 999px; background: rgba(12,16,15,.82); color: var(--teal); font: 10px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; }
+    .case-copy { padding: 23px 24px 25px; }
+    .case-kicker { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; color: var(--teal); font: 10px ui-monospace, monospace; letter-spacing: .14em; text-transform: uppercase; }
+    .case-copy h3 { margin-bottom: 10px; font-size: 21px; letter-spacing: -.02em; }
+    .case-copy > p { color: #bac5c2; font-size: 14px; }
+    .caption-grid { display: grid; gap: 9px; margin-top: 17px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .caption-row { display: grid; grid-template-columns: 112px 1fr; gap: 12px; font-size: 12px; }
+    .caption-row b { color: var(--dim); font-weight: 600; }
+    .caption-row span { color: var(--muted); }
+
+    .contribution-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .contribution { display: flex; gap: 13px; padding: 17px 18px; border: 1px solid var(--line); border-radius: 13px; background: rgba(20,25,24,.72); }
+    .contribution::before { content: "↳"; color: var(--teal); font-size: 19px; line-height: 1; }
+    .contribution p { margin: 0; color: #b9c4c1; font-size: 13px; }
+
+    .pipeline { display: grid; grid-template-columns: repeat(5, 1fr); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .stage { min-height: 150px; padding: 20px; border-right: 1px solid var(--line); background: var(--panel); }
+    .stage:last-child { border-right: 0; }
+    .stage-index { color: var(--teal); font: 11px ui-monospace, monospace; }
+    .stage h3 { margin: 26px 0 7px; font-size: 16px; }
+    .stage p { margin: 0; color: var(--muted); font-size: 12px; }
+    .flow-arrow { display: none; }
+
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .metric { padding: 21px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+    .metric .value { margin: 7px 0 6px; color: var(--ink); font: 700 25px/1.1 ui-monospace, monospace; }
+    .metric .value.placeholder { color: var(--amber); font-size: 15px; }
+    .metric p { margin: 0; color: var(--muted); font-size: 12px; }
+
+    details { border-top: 1px solid var(--line); }
+    details:last-child { border-bottom: 1px solid var(--line); }
+    summary { cursor: pointer; padding: 19px 0; color: var(--ink); font-size: 15px; list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; float: right; color: var(--teal); font: 18px ui-monospace, monospace; }
+    details[open] summary::after { content: "−"; }
+    .markdown { overflow: auto; margin: 0 0 20px; padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: #0a0e0d; color: #b9c8c4; font: 12px/1.7 ui-monospace, monospace; white-space: pre-wrap; }
+
+    .footer { padding: 42px 0 66px; border-top: 1px solid var(--line); }
+    .footer-inner { display: flex; justify-content: space-between; gap: 30px; align-items: center; }
+    .footer p { max-width: 560px; margin: 0; color: var(--muted); font-size: 13px; }
+    .footer-badge { padding: 9px 12px; border: 1px solid rgba(103,210,194,.35); border-radius: 999px; color: var(--teal); font: 10px ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 35px; }
+      .statement, .case-grid { grid-template-columns: 1fr; }
+      .case-card.wide { grid-column: auto; }
+      .pipeline { grid-template-columns: 1fr; }
+      .stage { min-height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      .stage:last-child { border-bottom: 0; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 30px, 1180px); }
+      .topnav { display: none; }
+      .hero { padding: 60px 0 45px; }
+      .contribution-grid, .metrics { grid-template-columns: 1fr; }
+      h1 { font-size: 51px; }
+      .section { padding: 48px 0; }
+      .section-heading { display: block; }
+      .section-heading p { margin-top: 10px; }
+      .footer-inner { display: block; }
+      .footer-badge { display: inline-block; margin-top: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <a class="brand" href="#top"><span class="brand-mark">U/</span> Umbra <span>case study</span></a>
+      <nav class="topnav" aria-label="Case study sections">
+        <a class="active" href="#context">Context</a>
+        <a href="#cases">Evidence</a>
+        <a href="#pipeline">Process</a>
+        <a href="#results">Outcomes</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="shell hero" id="context">
+      <div>
+        <div class="eyebrow">Portfolio case study / Market data</div>
+        <h1>Making real-time crypto market data easier to trust.</h1>
+        <p class="hero-lede">How I monitored multi-exchange data, validated spread and funding signals, and turned fast-changing market events into clear views for investigation.</p>
+        <div class="hero-note"><strong>My scope</strong> Analytics, data validation, metric interpretation, and reporting. The product interface is shown as the environment in which the analysis was performed.</div>
+      </div>
+      <aside class="meta-stack" aria-label="Role and tools">
+        <div class="meta-card"><div class="meta-label">Role</div><div class="meta-value">Data Analyst &amp; Analytics Engineer</div></div>
+        <div class="meta-card"><div class="meta-label">Toolbox</div><div class="meta-value">SQL · PostgreSQL · dashboards · data validation · reporting</div></div>
+        <div class="meta-card"><div class="meta-label">Scope</div><div class="meta-value">Spread · splash · funding event families</div></div>
+      </aside>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="section-heading"><h2>The business problem</h2><span class="number">02 / WHY IT MATTERED</span></div>
+        <div class="statement">
+          <article class="statement-card featured"><h3>Continuous market data, inconsistent reality</h3><p>Market data arrived continuously from multiple exchanges, each with different formats, timing, symbols, and quality characteristics. A signal could look valuable while still being stale, duplicated, incomplete, or impossible to execute.</p></article>
+          <article class="statement-card"><h3>The analytical need</h3><p>The team needed reliable reporting, anomaly detection, and a clear way to compare prices, spreads, and funding opportunities. The job was to make the data understandable enough for fast investigation without hiding uncertainty.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="cases">
+      <div class="shell">
+        <div class="section-heading"><h2>Evidence from the workflow</h2><p>Four real product views showing the path from market overview to detailed investigation.</p></div>
+        <div class="case-grid">
+          <article class="case-card wide">
+            <div class="case-image"><img src="assets/market-overview.png" alt="Umbra market overview showing event activity, top symbols, and latest events" loading="lazy"><span class="image-tag">Case 01 / overview</span></div>
+            <div class="case-copy"><div class="case-kicker"><span>Signal landscape</span><span>Spread · Splash · Funding</span></div><h3>Dashboard overview — establish the shape of the data</h3><p>The overview gives a fast read on event volume, the most active symbols, and the latest events across monitors. It is the starting point for checking whether an apparent market opportunity is part of a broad pattern or an isolated record.</p><div class="caption-grid"><div class="caption-row"><b>What it shows</b><span>Event activity, top symbols, and the latest cross-monitor signals.</span></div><div class="caption-row"><b>My contribution</b><span>Metric validation, event grouping, time-window comparison, and anomaly triage.</span></div><div class="caption-row"><b>Business value</b><span>Created a clear path from an unusual event count to the symbol, venue, and time window that required investigation.</span></div></div></div>
+          </article>
+
+          <article class="case-card">
+            <div class="case-image"><img src="assets/spread-dashboard.png" alt="Umbra spread dashboard table comparing tokens, exchanges, price, spread, and funding" loading="lazy"><span class="image-tag">Case 02 / spread</span></div>
+            <div class="case-copy"><div class="case-kicker"><span>Cross-exchange comparison</span><span>Spread</span></div><h3>Spread dashboard — compare like with like</h3><p>A structured table makes ticker, exchange route, price, spread, direction, and funding visible together. That layout supports quick validation of whether a spread is actionable or a symbol, route, or price-path issue.</p><div class="caption-grid"><div class="caption-row"><b>What it shows</b><span>Real-time spread comparison across exchanges.</span></div><div class="caption-row"><b>My contribution</b><span>SQL-based metric checks, route-level comparison, and missing-data review.</span></div><div class="caption-row"><b>Business value</b><span>Made it easier to distinguish relevant opportunities from suspicious or non-routable price gaps.</span></div></div></div>
+          </article>
+
+          <article class="case-card">
+            <div class="case-image"><img src="assets/funding-dashboard.png" alt="Umbra funding dashboard comparing funding deltas, exchange pairs, net spread, and settlement" loading="lazy"><span class="image-tag">Case 03 / funding</span></div>
+            <div class="case-copy"><div class="case-kicker"><span>Rate consistency</span><span>Funding</span></div><h3>Funding dashboard — surface deltas, not just rates</h3><p>Funding opportunities become more useful when the rate delta, net effect, exchange pair, and settlement timing are visible in one row. This supports validation of stale timestamps and suspiciously large deviations.</p><div class="caption-grid"><div class="caption-row"><b>What it shows</b><span>Funding-rate deltas, exchange pairs, net spread, and settlement.</span></div><div class="caption-row"><b>My contribution</b><span>Cross-source comparison, consistency checks, and reporting of outliers.</span></div><div class="caption-row"><b>Business value</b><span>Made rate discrepancies easier to prioritize and explain.</span></div></div></div>
+          </article>
+
+          <article class="case-card wide">
+            <div class="case-image"><img src="assets/spread-funding-charts.png" alt="Umbra spread and funding charts showing time-series movement across two chart panels" loading="lazy"><span class="image-tag">Case 04 / time series</span></div>
+            <div class="case-copy"><div class="case-kicker"><span>Temporal analysis</span><span>Spread / Funding charts</span></div><h3>Price and spread charts — investigate the event in time</h3><p>Tables show what is true now; charts show how it became true. Comparing in/out prices, spread movement, and funding behavior over time helps separate persistent market structure from a short-lived data artifact.</p><div class="caption-grid"><div class="caption-row"><b>What it shows</b><span>Price and spread movement over time for selected exchange routes.</span></div><div class="caption-row"><b>My contribution</b><span>Time-window selection, visual QA, and interpretation of discontinuities.</span></div><div class="caption-row"><b>Business value</b><span>Made short-lived artifacts easier to distinguish from persistent market movements.</span></div></div></div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="section-heading"><h2>What I contributed</h2><span class="number">03 / PRACTICE</span></div>
+        <div class="contribution-grid">
+          <div class="contribution"><p>Monitored and validated real-time prices, spreads, and funding rates.</p></div>
+          <div class="contribution"><p>Used SQL to combine and analyze data from multiple market sources.</p></div>
+          <div class="contribution"><p>Identified missing, outdated, duplicated, and anomalous records.</p></div>
+          <div class="contribution"><p>Created reports that helped the team evaluate market opportunities and investigate data issues.</p></div>
+          <div class="contribution"><p>Translated raw market data into clear metrics and dashboard views.</p></div>
+          <div class="contribution"><p>Documented anomalies clearly enough for the team to reproduce and investigate them.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="pipeline">
+      <div class="shell">
+        <div class="section-heading"><h2>The data path</h2><p>A compact explanation of how the analytical work connects sources, validation, and decisions.</p></div>
+        <div class="pipeline">
+          <div class="stage"><div class="stage-index">01</div><h3>Exchanges / APIs</h3><p>Continuous prices, spreads, funding, and event signals.</p></div>
+          <div class="stage"><div class="stage-index">02</div><h3>Market data layer</h3><p>Normalized records, timestamps, symbols, venues, and routes.</p></div>
+          <div class="stage"><div class="stage-index">03</div><h3>SQL validation</h3><p>Freshness, completeness, duplicates, outliers, and joins.</p></div>
+          <div class="stage"><div class="stage-index">04</div><h3>Metrics &amp; anomalies</h3><p>Spread, funding delta, event volume, and issue categories.</p></div>
+          <div class="stage"><div class="stage-index">05</div><h3>Dashboards &amp; reports</h3><p>Views that help a person decide what to trust and investigate.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="results">
+      <div class="shell">
+        <div class="section-heading"><h2>Outcomes</h2><p>Practical improvements supported by the work, stated without unverified performance claims.</p></div>
+        <div class="metrics">
+          <div class="metric"><div class="meta-label">Visibility</div><div class="value">Unified</div><p>Spread, splash, and funding activity in one analytical context</p></div>
+          <div class="metric"><div class="meta-label">Comparison</div><div class="value">Consistent</div><p>Comparable exchange routes, prices, rates, and timestamps</p></div>
+          <div class="metric"><div class="meta-label">Investigation</div><div class="value">Focused</div><p>A direct path from a market signal to the relevant route and time window</p></div>
+          <div class="metric"><div class="meta-label">Data quality</div><div class="value">Traceable</div><p>Clear checks for stale, missing, duplicated, and anomalous records</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer-inner">
+      <p>Umbra is shown as the product interface used for analysis. My contribution covered analytical validation, market-data interpretation, anomaly reporting, and decision-support views.</p>
+      <div class="footer-badge">Data quality is part of the product</div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Портфоліо-кейс: аналітика ринкових даних, контроль якості та моніторинг подій у продукті Umbra.">
+  <title>Umbra / Кейс з аналітики ринкових даних</title>
+  <style>
+    :root {
+      --ink: #eef4f3;
+      --muted: #8f9d9d;
+      --dim: #627171;
+      --line: rgba(194, 219, 215, .14);
+      --panel: #141918;
+      --panel-raised: #1a201f;
+      --canvas: #0c100f;
+      --teal: #67d2c2;
+      --teal-deep: #1c8076;
+      --coral: #f1716c;
+      --amber: #f1ae4b;
+      --blue: #89b9ff;
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 76% 0%, rgba(38, 109, 102, .18), transparent 30rem),
+        radial-gradient(circle at 10% 36%, rgba(241, 113, 108, .07), transparent 25rem),
+        var(--canvas);
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      line-height: 1.55;
+      letter-spacing: .01em;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .15;
+      background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black, transparent 78%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .shell { width: min(1180px, calc(100% - 48px)); margin: 0 auto; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      border-bottom: 1px solid var(--line);
+      background: rgba(12, 16, 15, .82);
+      backdrop-filter: blur(18px);
+    }
+    .topbar-inner { display: flex; align-items: center; justify-content: space-between; min-height: 72px; gap: 28px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 750; letter-spacing: -.03em; }
+    .brand-mark { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--teal); color: var(--teal); border-radius: 9px; font: 700 13px/1 ui-monospace, monospace; }
+    .brand span { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
+    .topnav { display: flex; gap: 22px; color: var(--muted); font-size: 12px; }
+    .topnav a:hover { color: var(--teal); }
+    .topnav .active { color: var(--ink); }
+
+    .hero { padding: 92px 0 66px; display: grid; grid-template-columns: 1.2fr .8fr; gap: 70px; align-items: end; }
+    .eyebrow { color: var(--teal); font: 700 11px/1 ui-monospace, monospace; letter-spacing: .18em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 760px; margin-bottom: 26px; font: 500 clamp(48px, 7vw, 86px)/.98 "Iowan Old Style", Georgia, serif; letter-spacing: -.055em; }
+    .hero-lede { max-width: 650px; margin-bottom: 32px; color: #c4cecc; font-size: 18px; }
+    .hero-note { border-left: 2px solid var(--teal); padding-left: 17px; color: var(--muted); font-size: 13px; }
+    .hero-note strong { display: block; color: var(--ink); margin-bottom: 4px; }
+    .meta-stack { display: grid; gap: 12px; }
+    .meta-card { padding: 18px 20px; border: 1px solid var(--line); border-radius: 14px; background: rgba(20, 25, 24, .74); }
+    .meta-label { color: var(--dim); font: 10px/1.2 ui-monospace, monospace; letter-spacing: .15em; text-transform: uppercase; }
+    .meta-value { margin-top: 8px; color: var(--ink); font-size: 15px; }
+
+    .section { padding: 66px 0; border-top: 1px solid var(--line); }
+    .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 26px; }
+    .section-heading h2 { margin-bottom: 0; font-size: clamp(26px, 3vw, 40px); letter-spacing: -.04em; }
+    .section-heading p { max-width: 510px; margin-bottom: 2px; color: var(--muted); font-size: 14px; }
+    .number { color: var(--teal); font: 12px ui-monospace, monospace; }
+
+    .statement { display: grid; grid-template-columns: .8fr 1.2fr; gap: 24px; }
+    .statement-card { padding: 26px; border: 1px solid var(--line); border-radius: var(--radius); background: linear-gradient(140deg, rgba(28, 128, 118, .13), rgba(20, 25, 24, .88) 55%); }
+    .statement-card h3 { margin-bottom: 12px; font-size: 17px; }
+    .statement-card p { margin-bottom: 0; color: var(--muted); font-size: 14px; }
+    .statement-card.featured { border-color: rgba(103, 210, 194, .4); }
+
+    .case-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .case-card { overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+    .case-card.wide { grid-column: 1 / -1; }
+    .case-image { position: relative; min-height: 180px; border-bottom: 1px solid var(--line); background: #0d1211; }
+    .case-image img { display: block; width: 100%; height: auto; min-height: 180px; object-fit: contain; object-position: top; opacity: .96; }
+    .image-tag { position: absolute; top: 14px; left: 14px; padding: 5px 8px; border: 1px solid rgba(255,255,255,.15); border-radius: 999px; background: rgba(12,16,15,.82); color: var(--teal); font: 10px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; }
+    .case-copy { padding: 23px 24px 25px; }
+    .case-kicker { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; color: var(--teal); font: 10px ui-monospace, monospace; letter-spacing: .14em; text-transform: uppercase; }
+    .case-copy h3 { margin-bottom: 10px; font-size: 21px; letter-spacing: -.02em; }
+    .case-copy > p { color: #bac5c2; font-size: 14px; }
+    .caption-grid { display: grid; gap: 9px; margin-top: 17px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .caption-row { display: grid; grid-template-columns: 112px 1fr; gap: 12px; font-size: 12px; }
+    .caption-row b { color: var(--dim); font-weight: 600; }
+    .caption-row span { color: var(--muted); }
+
+    .contribution-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .contribution { display: flex; gap: 13px; padding: 17px 18px; border: 1px solid var(--line); border-radius: 13px; background: rgba(20,25,24,.72); }
+    .contribution::before { content: "↳"; color: var(--teal); font-size: 19px; line-height: 1; }
+    .contribution p { margin: 0; color: #b9c4c1; font-size: 13px; }
+
+    .pipeline { display: grid; grid-template-columns: repeat(5, 1fr); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .stage { min-height: 150px; padding: 20px; border-right: 1px solid var(--line); background: var(--panel); }
+    .stage:last-child { border-right: 0; }
+    .stage-index { color: var(--teal); font: 11px ui-monospace, monospace; }
+    .stage h3 { margin: 26px 0 7px; font-size: 16px; }
+    .stage p { margin: 0; color: var(--muted); font-size: 12px; }
+    .flow-arrow { display: none; }
+
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .metric { padding: 21px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+    .metric .value { margin: 7px 0 6px; color: var(--ink); font: 700 25px/1.1 ui-monospace, monospace; }
+    .metric .value.placeholder { color: var(--amber); font-size: 15px; }
+    .metric p { margin: 0; color: var(--muted); font-size: 12px; }
+
+    details { border-top: 1px solid var(--line); }
+    details:last-child { border-bottom: 1px solid var(--line); }
+    summary { cursor: pointer; padding: 19px 0; color: var(--ink); font-size: 15px; list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; float: right; color: var(--teal); font: 18px ui-monospace, monospace; }
+    details[open] summary::after { content: "−"; }
+    .markdown { overflow: auto; margin: 0 0 20px; padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: #0a0e0d; color: #b9c8c4; font: 12px/1.7 ui-monospace, monospace; white-space: pre-wrap; }
+
+    .footer { padding: 42px 0 66px; border-top: 1px solid var(--line); }
+    .footer-inner { display: flex; justify-content: space-between; gap: 30px; align-items: center; }
+    .footer p { max-width: 560px; margin: 0; color: var(--muted); font-size: 13px; }
+    .footer-badge { padding: 9px 12px; border: 1px solid rgba(103,210,194,.35); border-radius: 999px; color: var(--teal); font: 10px ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 35px; }
+      .statement, .case-grid { grid-template-columns: 1fr; }
+      .case-card.wide { grid-column: auto; }
+      .pipeline { grid-template-columns: 1fr; }
+      .stage { min-height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      .stage:last-child { border-bottom: 0; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 30px, 1180px); }
+      .topnav { display: none; }
+      .hero { padding: 60px 0 45px; }
+      .contribution-grid, .metrics { grid-template-columns: 1fr; }
+      h1 { font-size: 51px; }
+      .section { padding: 48px 0; }
+      .section-heading { display: block; }
+      .section-heading p { margin-top: 10px; }
+      .footer-inner { display: block; }
+      .footer-badge { display: inline-block; margin-top: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <a class="brand" href="#top"><span class="brand-mark">U/</span> Umbra <span>портфоліо-кейс</span></a>
+      <nav class="topnav" aria-label="Розділи кейсу">
+        <a class="active" href="#context">Контекст</a>
+        <a href="#cases">Приклади</a>
+        <a href="#pipeline">Процес</a>
+        <a href="#results">Результат</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="shell hero" id="context">
+      <div>
+        <div class="eyebrow">Портфоліо-кейс / Ринкові дані</div>
+        <h1>Як зробити ринкові дані надійною основою для рішень.</h1>
+        <p class="hero-lede">Я контролював дані з різних криптобірж, перевіряв сигнали spread і funding та перетворював мінливі ринкові події на зрозумілі сценарії для аналізу.</p>
+        <div class="hero-note"><strong>Моя зона відповідальності</strong> Аналітика, валідація даних, інтерпретація метрик і звітність. Інтерфейс продукту показаний як середовище, у якому виконувалася аналітична робота.</div>
+      </div>
+      <aside class="meta-stack" aria-label="Роль та інструменти">
+        <div class="meta-card"><div class="meta-label">Роль</div><div class="meta-value">Data Analyst &amp; Analytics Engineer</div></div>
+        <div class="meta-card"><div class="meta-label">Інструменти</div><div class="meta-value">SQL · PostgreSQL · дашборди · валідація даних · звітність</div></div>
+        <div class="meta-card"><div class="meta-label">Фокус</div><div class="meta-value">Spread · splash · funding-сигнали</div></div>
+      </aside>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="section-heading"><h2>Бізнес-проблема</h2><span class="number">02 / ЧОМУ ЦЕ ВАЖЛИВО</span></div>
+        <div class="statement">
+          <article class="statement-card featured"><h3>Безперервний потік даних — неоднорідна якість</h3><p>Дані надходили з кількох бірж у різних форматах, з різними позначеннями активів, часовими затримками та рівнем якості. Потенційно вигідний сигнал міг виявитися застарілим, дубльованим, неповним або непридатним для виконання.</p></article>
+          <article class="statement-card"><h3>Що було потрібно команді</h3><p>Надійна звітність, виявлення аномалій і зрозуміле порівняння цін, спредів та funding-можливостей. Моє завдання — зробити дані достатньо прозорими для швидкої перевірки, не приховуючи їхніх обмежень.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="cases">
+      <div class="shell">
+        <div class="section-heading"><h2>Приклади з робочого процесу</h2><p>Чотири реальні екрани продукту — від загального огляду ринку до детального аналізу окремого сигналу.</p></div>
+        <div class="case-grid">
+          <article class="case-card wide">
+            <div class="case-image"><img src="assets/market-overview.png" alt="Огляд ринку Umbra з активністю подій, найактивнішими токенами та останніми сигналами" loading="lazy"><span class="image-tag">Кейс 01 / огляд</span></div>
+            <div class="case-copy"><div class="case-kicker"><span>Загальна картина сигналів</span><span>Spread · Splash · Funding</span></div><h3>Оглядовий дашборд — зрозуміти структуру даних</h3><p>Екран показує обсяг подій, найактивніші токени та останні сигнали з різних моніторів. Звідси починається перевірка: ринкова можливість є частиною загальної тенденції чи лише окремим аномальним записом.</p><div class="caption-grid"><div class="caption-row"><b>Що показано</b><span>Активність подій, найпопулярніші токени та останні сигнали моніторингу.</span></div><div class="caption-row"><b>Мій внесок</b><span>Валідація метрик, групування подій, порівняння часових вікон і первинний аналіз аномалій.</span></div><div class="caption-row"><b>Цінність</b><span>Створив зрозумілий шлях від незвичного обсягу подій до конкретного токена, біржі та часового інтервалу для перевірки.</span></div></div></div>
+          </article>
+
+          <article class="case-card">
+            <div class="case-image"><img src="assets/spread-dashboard.png" alt="Spread-дашборд Umbra з порівнянням токенів, бірж, цін, спредів і funding" loading="lazy"><span class="image-tag">Кейс 02 / spread</span></div>
+            <div class="case-copy"><div class="case-kicker"><span>Порівняння між біржами</span><span>Spread</span></div><h3>Spread-дашборд — порівнювати співставні дані</h3><p>Структурована таблиця об'єднує токен, торговий маршрут, ціни, спред, напрям і funding. Це допомагає швидко перевірити, чи можна реалізувати можливість, чи різниця виникла через помилку в символі, маршруті або ціні.</p><div class="caption-grid"><div class="caption-row"><b>Що показано</b><span>Порівняння спредів між біржами в режимі реального часу.</span></div><div class="caption-row"><b>Мій внесок</b><span>Перевірка метрик за допомогою SQL, порівняння торгових маршрутів і контроль пропущених даних.</span></div><div class="caption-row"><b>Цінність</b><span>Допоміг відокремлювати релевантні можливості від підозрілих або технічно недоступних цінових розривів.</span></div></div></div>
+          </article>
+
+          <article class="case-card">
+            <div class="case-image"><img src="assets/funding-dashboard.png" alt="Funding-дашборд Umbra з порівнянням ставок, пар бірж, чистого спреду та часу розрахунку" loading="lazy"><span class="image-tag">Кейс 03 / funding</span></div>
+            <div class="case-copy"><div class="case-kicker"><span>Узгодженість ставок</span><span>Funding</span></div><h3>Funding-дашборд — бачити різницю, а не лише ставки</h3><p>Funding-сигнал стає кориснішим, коли в одному рядку видно різницю ставок, чистий результат, пару бірж і час наступного розрахунку. Це допомагає помічати застарілі часові мітки та підозріло великі відхилення.</p><div class="caption-grid"><div class="caption-row"><b>Що показано</b><span>Різниця funding-ставок, пари бірж, чистий спред і час розрахунку.</span></div><div class="caption-row"><b>Мій внесок</b><span>Порівняння джерел, перевірка узгодженості та звітування про аномальні значення.</span></div><div class="caption-row"><b>Цінність</b><span>Зробив розбіжності ставок простішими для пріоритизації та пояснення.</span></div></div></div>
+          </article>
+
+          <article class="case-card wide">
+            <div class="case-image"><img src="assets/spread-funding-charts.png" alt="Графіки Umbra зі змінами цін, спредів і funding у часі" loading="lazy"><span class="image-tag">Кейс 04 / часовий ряд</span></div>
+            <div class="case-copy"><div class="case-kicker"><span>Аналіз у часі</span><span>Графіки spread / funding</span></div><h3>Графіки цін і спредів — дослідити подію в часі</h3><p>Таблиця показує поточний стан, а графік — як він сформувався. Порівняння цін купівлі та продажу, динаміки спреду й funding допомагає відокремити стабільний ринковий рух від короткочасного артефакту в даних.</p><div class="caption-grid"><div class="caption-row"><b>Що показано</b><span>Динаміка цін і спреду для вибраних маршрутів між біржами.</span></div><div class="caption-row"><b>Мій внесок</b><span>Вибір часових інтервалів, візуальний контроль якості та інтерпретація розривів.</span></div><div class="caption-row"><b>Цінність</b><span>Допоміг відрізняти короткочасні артефакти від стійких ринкових змін.</span></div></div></div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="section-heading"><h2>Мій внесок</h2><span class="number">03 / ПРАКТИКА</span></div>
+        <div class="contribution-grid">
+          <div class="contribution"><p>Контролював і перевіряв ціни, спреди та funding-ставки в режимі реального часу.</p></div>
+          <div class="contribution"><p>За допомогою SQL об'єднував і аналізував дані з кількох ринкових джерел.</p></div>
+          <div class="contribution"><p>Виявляв пропущені, застарілі, дубльовані та аномальні записи.</p></div>
+          <div class="contribution"><p>Готував звіти для оцінки ринкових можливостей і дослідження проблем із даними.</p></div>
+          <div class="contribution"><p>Перетворював сирі ринкові дані на зрозумілі метрики та дашборди.</p></div>
+          <div class="contribution"><p>Документував аномалії так, щоб команда могла їх відтворити й перевірити.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="pipeline">
+      <div class="shell">
+        <div class="section-heading"><h2>Шлях даних</h2><p>Як аналітичний процес поєднував джерела, перевірку якості та прийняття рішень.</p></div>
+        <div class="pipeline">
+          <div class="stage"><div class="stage-index">01</div><h3>Біржі / API</h3><p>Безперервний потік цін, спредів, funding-ставок і ринкових подій.</p></div>
+          <div class="stage"><div class="stage-index">02</div><h3>Шар ринкових даних</h3><p>Нормалізовані записи, часові мітки, токени, біржі та маршрути.</p></div>
+          <div class="stage"><div class="stage-index">03</div><h3>Валідація через SQL</h3><p>Актуальність, повнота, дублікати, викиди та коректність об'єднань.</p></div>
+          <div class="stage"><div class="stage-index">04</div><h3>Метрики й аномалії</h3><p>Спред, різниця funding-ставок, обсяг подій і категорії проблем.</p></div>
+          <div class="stage"><div class="stage-index">05</div><h3>Дашборди та звіти</h3><p>Подання, які допомагають визначити, яким даним довіряти та що перевіряти.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="results">
+      <div class="shell">
+        <div class="section-heading"><h2>Результат</h2><p>Практичний ефект від роботи — без непідтверджених цифр і перебільшень.</p></div>
+        <div class="metrics">
+          <div class="metric"><div class="meta-label">Огляд</div><div class="value">Єдиний</div><p>Spread, splash і funding-сигнали в одному аналітичному контексті</p></div>
+          <div class="metric"><div class="meta-label">Порівняння</div><div class="value">Узгоджене</div><p>Співставні маршрути, ціни, ставки та часові мітки</p></div>
+          <div class="metric"><div class="meta-label">Перевірка</div><div class="value">Сфокусована</div><p>Прямий шлях від сигналу до потрібного маршруту й часового інтервалу</p></div>
+          <div class="metric"><div class="meta-label">Якість даних</div><div class="value">Контрольована</div><p>Чіткі перевірки застарілих, пропущених, дубльованих і аномальних записів</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer-inner">
+      <p>Umbra показана як інтерфейс продукту, у якому проводився аналіз. Мій внесок охоплював аналітичну валідацію, інтерпретацію ринкових даних, звітування про аномалії та підготовку даних для прийняття рішень.</p>
+      <div class="footer-badge">Якість даних — частина продукту</div>
+    </div>
+  </footer>
+</body>
+</html>
